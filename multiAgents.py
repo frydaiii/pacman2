@@ -74,7 +74,23 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        distance = float('inf')
+        foodList = newFood.asList()
+
+        if successorGameState.isWin():
+            return float('inf')
+
+
+        for state in newGhostStates:
+            if state.getPosition() == newPos and (state.scaredTimer == 0):
+                return float('-inf')
+
+        for x in foodList:
+            tempDistance = (manhattanDistance(newPos, x))
+            if (tempDistance < distance):
+                distance = tempDistance
+
+        return 1.0/distance + successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -281,7 +297,43 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    
+    """ Manhattan distance to the foods from the current state """
+    foodList = newFood.asList()
+    from util import manhattanDistance
+    foodDistance = [0]
+    for pos in foodList:
+        foodDistance.append(manhattanDistance(newPos,pos))
+
+    """ Manhattan distance to each ghost from the current state"""
+    ghostPos = []
+    for ghost in newGhostStates:
+        ghostPos.append(ghost.getPosition())
+    ghostDistance = [0]
+    for pos in ghostPos:
+        ghostDistance.append(manhattanDistance(newPos,pos))
+
+    numberofPowerPellets = len(currentGameState.getCapsules())
+
+    score = 0          
+    sumScaredTimes = sum(newScaredTimes)
+    sumGhostDistance = sum (ghostDistance)
+    reciprocalfoodDistance = 0
+
+    if sum(foodDistance) > 0:
+        reciprocalfoodDistance = 1.0 / max(foodDistance)
+        
+    score += currentGameState.getScore()  + reciprocalfoodDistance
+
+    if sumScaredTimes > 0:    
+        score +=   sumScaredTimes + (-1 * numberofPowerPellets) + (-1 * sumGhostDistance)
+    else :
+        score +=  sumGhostDistance + numberofPowerPellets
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
